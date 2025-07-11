@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Выбор карт Таро</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 10px;
+      padding: 10px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .card-button {
+      display: inline-block;
+      margin: 4px;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1px solid #888;
+      border-radius: 8px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .card-button:hover {
+      background-color: #e0e0e0;
+    }
+    .card-button.disabled {
+      background-color: #ccc;
+    }
+    .output {
+      margin-top: 20px;
+      white-space: pre-wrap;
+      border: 1px solid #aaa;
+      padding: 10px;
+      font-size: 16px;
+    }
+    .controls {
+      margin-top: 10px;
+      text-align: center;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 14px;
+      font-size: 16px;
+    }
+    @media (max-width: 600px) {
+      .card-button {
+        font-size: 14px;
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Выбор карт Таро</h1>
+
+  <div id="card-sections"></div>
+
+  <h2>Добавленные карты: <span id="card-count">0</span>/78</h2>
+  <div class="output" id="output"></div>
+
+  <div class="controls">
+    <button onclick="copyToClipboard()">Скопировать</button>
+    <button onclick="resetSelection()">Сбросить</button>
+  </div>
+
+  <script>
+    const roman = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+    const cards = {
+      "Старшие арканы": [
+        "Дурак", "Маг", "Верховная Жрица", "Императрица", "Император",
+        "Иерофант", "Влюблённые", "Колесница", "Сила", "Отшельник",
+        "Колесо Фортуны", "Справедливость", "Повешенный", "Смерть", "Умеренность",
+        "Дьявол", "Башня", "Звезда", "Луна", "Солнце", "Страшный Суд", "Мир"
+      ],
+      "Жезлы": genMinor("Жезлов"),
+      "Кубки": genMinor("Кубков"),
+      "Мечи": genMinor("Мечей"),
+      "Пентакли": genMinor("Пентаклей")
+    };
+
+    function genMinor(suit) {
+      const list = [];
+      for (let i = 1; i <= 10; i++) list.push(`${roman[i]} ${suit}`);
+      list.push(`Паж ${suit}`, `Рыцарь ${suit}`, `Королева ${suit}`, `Король ${suit}`);
+      return list;
+    }
+
+    const selection = new Set();
+
+    function renderCards() {
+      const container = document.getElementById('card-sections');
+      for (const section in cards) {
+        const h2 = document.createElement('h2');
+        h2.textContent = section;
+        container.appendChild(h2);
+
+        const group = document.createElement('div');
+        cards[section].forEach(name => {
+          const btn = document.createElement('div');
+          btn.className = 'card-button';
+          btn.textContent = simplifyLabel(name);
+          btn.dataset.name = name;
+          btn.onclick = () => toggleCard(name, btn);
+          group.appendChild(btn);
+        });
+        container.appendChild(group);
+      }
+    }
+
+    function simplifyLabel(name) {
+      return name.replace(/ (Жезлов|Кубков|Мечей|Пентаклей)/, "");
+    }
+
+    function toggleCard(name, button) {
+      if (selection.has(name)) {
+        selection.delete(name);
+        button.classList.remove("disabled");
+      } else {
+        selection.add(name);
+        button.classList.add("disabled");
+      }
+      updateOutput();
+    }
+
+    function updateOutput() {
+      const output = document.getElementById('output');
+      output.textContent = Array.from(selection).join("\n");
+      document.getElementById('card-count').textContent = selection.size;
+    }
+
+    function copyToClipboard() {
+      const text = document.getElementById('output').textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => alert("Скопировано!"))
+        .catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand("copy");
+        alert("Скопировано!");
+      } catch (err) {
+        alert("Не удалось скопировать текст :(");
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function resetSelection() {
+      selection.clear();
+      document.querySelectorAll('.card-button').forEach(btn => btn.classList.remove('disabled'));
+      updateOutput();
+    }
+
+    renderCards();
+  </script>
+</body>
+</html>
