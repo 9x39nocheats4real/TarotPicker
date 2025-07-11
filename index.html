@@ -127,7 +127,7 @@
 
     function updateOutput() {
       const output = document.getElementById('output');
-      output.textContent = Array.from(selection).join("\n");
+      output.textContent = Array.from(selection).join(", ");
       document.getElementById('card-count').textContent = selection.size;
     }
 
